@@ -43,7 +43,9 @@ asciidoc:
     highlightjs-theme: railscasts
   sourcemap: true
 urls:
+  latest_version_segment_strategy: redirect:to
   latest_version_segment: ''
+  redirect_facility: httpd
 runtime:
   log:
     failure_level: warn
