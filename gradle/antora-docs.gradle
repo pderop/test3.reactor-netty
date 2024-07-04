@@ -26,6 +26,7 @@ def isCommandAvailable(String command) {
 }
 
 antora {
+	playbook = findProperty('antora.playbook') ?: "antora-playbook.yml"
 	options = [clean: true, fetch: !project.gradle.startParameter.offline, stacktrace: true]
 
 	def version = project.version
