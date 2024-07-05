@@ -1,4 +1,4 @@
-name: Deploy Docs (Antora docs-build)
+name: Deploy Docs (Act)
 
 on:
   workflow_dispatch:
