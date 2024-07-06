@@ -24,7 +24,7 @@ jobs:
                   ref: docs-build
                   fetch-depth: 1
             - name: Dispatch (partial build)
-              if: github.ref_type == 'branch'
+              if: github.ref_type == 'branch' && github.event_name != 'workflow_dispatch'
               env:
                   GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
               run: gh workflow run deploy-docs.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
