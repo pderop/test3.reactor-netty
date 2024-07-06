@@ -14,10 +14,12 @@ antora:
       root_component_name: 'reactor-netty'
 site:
   title: Reactor Netty Reference Guide
-  url: http://192.168.1.10:9000/projectreactor/reactor-netty/reference/
+  #url: http://192.168.1.10:9000/projectreactor/reactor-netty/reference/
+  url: http://docs.spring.io/projectreactor/reactor-netty/reference/
 content:
   sources:
-      - url: https://github.com/pderop/test3.reactor-netty
+      #- url: https://github.com/pderop/test3.reactor-netty
+      - url: https://github.com/reactor/reactor-netty
         branches:
             - 'main'
         tags:
