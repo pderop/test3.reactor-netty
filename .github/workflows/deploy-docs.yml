@@ -39,8 +39,6 @@ jobs:
                 run: ./gradlew antora
             -   name: Copy the cache to be included in the site
                 run: cp -rf build/antora/inject-collector-cache-config-extension/.cache build/site/
-            -   name: DEBUG
-                run: find build/site
 #            -   name: Publish Docs
 #                uses: spring-io/spring-doc-actions/rsync-antora-reference@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
 #                with:
