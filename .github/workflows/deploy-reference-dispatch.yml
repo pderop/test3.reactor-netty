@@ -1,4 +1,4 @@
-name: Deploy Ref Docs Dispatcher
+name: Deploy Reference Dispatcher
 on:
   push:
     branches:
