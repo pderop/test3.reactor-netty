@@ -1,0 +1,33 @@
+name: Deploy Ref Docs Dispatcher
+on:
+  push:
+    branches:
+      - "main"
+  repository_dispatch:
+    types: request-build-reference # legacy
+  workflow_dispatch:
+#        permissions:
+#            teams:
+#                - 'reactor/team'
+
+permissions: read-all
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'pderop'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: docs-build
+        fetch-depth: 1
+    - name: Dispatch (partial build)
+      if: github.ref_type == 'branch' && github.event_name != 'workflow_dispatch'
+      env:
+        GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: gh workflow run deploy-docs.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
+    - name: Dispatch (full build)
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: gh workflow run deploy-docs.yml -r $(git rev-parse --abbrev-ref HEAD)
