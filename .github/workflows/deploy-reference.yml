@@ -14,7 +14,7 @@ permissions: read-all
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'pderop'
+    #if: github.repository_owner == 'reactor'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
