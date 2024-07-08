@@ -12,7 +12,7 @@ on:
 permissions: read-all
 jobs:
   build:
-    if: github.repository_owner == 'pderop'
+    #if: github.repository_owner == 'reactor'
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
