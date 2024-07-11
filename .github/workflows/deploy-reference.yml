@@ -36,7 +36,7 @@ jobs:
         if [[ $BUILD_VERSION != *-SNAPSHOT ]]; then
           gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
         else
-          echo "not deploying reference docs on a push for snapshot version: $BUILD_VERSUIB"
+          echo "not deploying reference docs on a push for snapshot version: $BUILD_VERSION"
         fi
     - name: Dispatch (partial)
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.build-refname
