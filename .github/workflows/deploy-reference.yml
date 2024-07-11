@@ -32,7 +32,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
       run: |-
         git fetch --depth 1 https://github.com/$GITHUB_REPOSITORY ${{ github.event.inputs.build-refname }}
-        echo BUILD_VERSION=$(git cat-file --textconv FETCH_HEAD:gradle.properties | sed -n '/^version=/ { s/^version=//;p }')
+        BUILD_VERSION=$(git cat-file --textconv FETCH_HEAD:gradle.properties | sed -n '/^version=/ { s/^version=//;p }')
         if [[ $BUILD_VERSION != *-SNAPSHOT ]]; then
           gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
         else
