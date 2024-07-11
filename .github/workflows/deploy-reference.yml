@@ -6,6 +6,11 @@ on:
   repository_dispatch:
     types: request-build-reference # legacy
   workflow_dispatch:
+    inputs:
+      build-refname:
+    description: Enter git refname to build (e.g., main). Leave empty for a full build
+    required: false
+
 #        permissions:
 #            teams:
 #                - 'reactor/team'
@@ -21,13 +26,18 @@ jobs:
       with:
         ref: docs-build
         fetch-depth: 1
-    - name: Dispatch (partial build)
+    - name: Dispatch on push
       if: github.ref_type == 'branch' && github.event_name != 'workflow_dispatch'
       env:
         GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
       run: gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
-    - name: Dispatch (full build)
-      if: github.event_name == 'workflow_dispatch'
+    - name: Dispatch (partial)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.build-refname
       env:
         GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.event.inputs.build-refname }}
+    - name: Dispatch (full)
+      if: github.event_name == 'workflow_dispatch' && !github.event.inputs.build-refname
+      env:
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
       run: gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD)
