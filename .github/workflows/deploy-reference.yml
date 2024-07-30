@@ -1,56 +1,50 @@
-name: Deploy Reference
-run-name: ${{ format('{0} ({1})', github.workflow, github.event.inputs.build-refname || 'all') }}
+name: Deploy Reference Dispatcher
 on:
+  push:
+    branches:
+      - "main"
+  repository_dispatch:
+    types: request-build-reference # legacy
   workflow_dispatch:
     inputs:
       build-refname:
-        description: Enter git refname to build (e.g., main).
-        required: false
-    push:
-      branches: docs-build
+    description: Enter git refname to build (e.g., main). Leave empty for a full build
+    required: false
+
+    permissions:
+        teams:
+            - 'reactor/team'
 
 permissions: read-all
 jobs:
   build:
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'reactor'
-    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-    - name: Set up Ruby for asciidoctor-pdf
-      uses: ruby/setup-ruby@97e35c5302afcf3f5ac1df3fca9343d32536b286 # v1
-      with:
-        ruby-version: 3.3.0
-    - name: Install asciidoctor-pdf / rouge
-      run: gem install asciidoctor-pdf rouge
-    - name: Setup java 17 for antora
-      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
     - name: Checkout
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-    - name: Set up refname build
-      if: github.event.inputs.build-refname
-      run: |
+      uses: actions/checkout@v4
+      with:
+        ref: docs-build
+        fetch-depth: 1
+    - name: Dispatch on push
+      if: github.ref_type == 'branch' && github.event_name != 'workflow_dispatch'
+      env:
+        GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: |-
         git fetch --depth 1 https://github.com/$GITHUB_REPOSITORY ${{ github.event.inputs.build-refname }}
-        echo BUILD_REFNAME=${{ github.event.inputs.build-refname }} >> $GITHUB_ENV
-        echo BUILD_VERSION=$(git cat-file --textconv FETCH_HEAD:gradle.properties | sed -n '/^version=/ { s/^version=//;p }') >> $GITHUB_ENV
-    - name: Run Antora
-      run: ./gradlew antora
-    - name: Copy the cache to be included in the site
-      run: cp -rf build/antora/inject-collector-cache-config-extension/.cache build/site/
-    - name: Publish Docs
-      uses: spring-io/spring-doc-actions/rsync-antora-reference@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
-      with:
-        docs-username: ${{ secrets.DOCS_USERNAME }}
-        docs-host: ${{ secrets.DOCS_HOST }}
-        docs-ssh-key: ${{ secrets.DOCS_SSH_KEY }}
-        docs-ssh-host-key: ${{ secrets.DOCS_SSH_HOST_KEY }}
-        site-path: build/site
-        httpdocs-path: /projectreactor/reactor-netty/reference
-    - name: Bust Clouflare Cache
-      uses: spring-io/spring-doc-actions/bust-cloudflare-antora-cache@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
-      with:
-        context-root: projectreactor
-        cloudflare-zone-id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        cloudflare-cache-token: ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}
+        BUILD_VERSION=$(git cat-file --textconv FETCH_HEAD:gradle.properties | sed -n '/^version=/ { s/^version=//;p }')
+        if [[ $BUILD_VERSION != *-SNAPSHOT ]]; then
+          gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.ref_name }}
+        else
+          echo "not deploying reference docs on a push for snapshot version: $BUILD_VERSION"
+        fi
+    - name: Dispatch (partial)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.build-refname
+      env:
+        GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD) -f build-refname=${{ github.event.inputs.build-refname }}
+    - name: Dispatch (full)
+      if: github.event_name == 'workflow_dispatch' && !github.event.inputs.build-refname
+      env:
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_REPO_TOKEN }}
+      run: gh workflow run deploy-reference.yml -r $(git rev-parse --abbrev-ref HEAD)
