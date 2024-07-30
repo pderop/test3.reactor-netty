@@ -12,7 +12,7 @@ on:
 permissions: read-all
 jobs:
   build:
-    #if: github.repository_owner == 'reactor'
+    if: github.repository_owner == 'reactor'
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
@@ -36,24 +36,21 @@ jobs:
         echo BUILD_REFNAME=${{ github.event.inputs.build-refname }} >> $GITHUB_ENV
         echo BUILD_VERSION=$(git cat-file --textconv FETCH_HEAD:gradle.properties | sed -n '/^version=/ { s/^version=//;p }') >> $GITHUB_ENV
     - name: Run Antora
-      run: |-
-        ./gradlew antora
-        echo "docs built: ..."
-        find build/site/
+      run: ./gradlew antora
     - name: Copy the cache to be included in the site
       run: cp -rf build/antora/inject-collector-cache-config-extension/.cache build/site/
-#            -   name: Publish Docs
-#                uses: spring-io/spring-doc-actions/rsync-antora-reference@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
-#                with:
-#                    docs-username: ${{ secrets.DOCS_USERNAME }}
-#                    docs-host: ${{ secrets.DOCS_HOST }}
-#                    docs-ssh-key: ${{ secrets.DOCS_SSH_KEY }}
-#                    docs-ssh-host-key: ${{ secrets.DOCS_SSH_HOST_KEY }}
-#                    site-path: build/site
-#                    httpdocs-path: /projectreactor/reactor-netty/reference
-#            -   name: Bust Clouflare Cache
-#                uses: spring-io/spring-doc-actions/bust-cloudflare-antora-cache@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
-#                with:
-#                    context-root: projectreactor
-#                    cloudflare-zone-id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-#                    cloudflare-cache-token: ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}
+    - name: Publish Docs
+      uses: spring-io/spring-doc-actions/rsync-antora-reference@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
+      with:
+        docs-username: ${{ secrets.DOCS_USERNAME }}
+        docs-host: ${{ secrets.DOCS_HOST }}
+        docs-ssh-key: ${{ secrets.DOCS_SSH_KEY }}
+        docs-ssh-host-key: ${{ secrets.DOCS_SSH_HOST_KEY }}
+        site-path: build/site
+        httpdocs-path: /projectreactor/reactor-netty/reference
+    - name: Bust Clouflare Cache
+      uses: spring-io/spring-doc-actions/bust-cloudflare-antora-cache@852920ba3fb1f28b35a2f13201133bc00ef33677 # v0.0.18
+      with:
+        context-root: projectreactor
+        cloudflare-zone-id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        cloudflare-cache-token: ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}
